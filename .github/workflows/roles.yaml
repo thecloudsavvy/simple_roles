@@ -1,6 +1,9 @@
 name: Create IAM User, S3 Bucket, and Policy
 
-on: [push]
+on:
+  push:
+    branches:
+      - main
 
 jobs:
   create-iam-user-and-policy:
@@ -17,13 +20,6 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
 
-    - name: Create S3 Bucket
-      run: |
-        BUCKET_NAME=my-github-action-bucket
-        if ! aws s3api head-bucket --bucket $BUCKET_NAME 2>/dev/null; then
-          aws s3api create-bucket --bucket $BUCKET_NAME --region us-east-1
-        fi
-
     - name: Delete Existing IAM User (if exists)
       run: |
         USER_NAME=My-user2
@@ -37,7 +33,6 @@ jobs:
 
     - name: Create IAM Policy
       run: |
-        BUCKET_NAME=my-github-action-bucket
         cat <<EoF > access-policy.json
         {
           "Version": "2012-10-17",
@@ -49,10 +44,7 @@ jobs:
                 "s3:GetObject",
                 "s3:PutObject"
               ],
-              "Resource": [
-                "arn:aws:s3:::$BUCKET_NAME",
-                "arn:aws:s3:::$BUCKET_NAME/*"
-              ]
+              "Resource": "*"
             }
           ]
         }
