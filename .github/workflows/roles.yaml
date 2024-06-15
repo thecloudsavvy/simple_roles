@@ -43,12 +43,12 @@ jobs:
         }
         EoF
 
-        aws iam create-policy --policy-name My-Policy --policy-document file://access-policy.json
+        aws iam create-policy --policy-name Mynew-Policy --policy-document file://access-policy.json
 
     - name: Attach IAM Policy to User
       run: |
         POLICY_ARN=$(aws iam list-policies --output json --query 'Users[0].Arn' --output text)
-        aws iam attach-user-policy --user-name My-user --policy-arn $POLICY_ARN
+        aws iam attach-user-policy --user-name Mynew-user --policy-arn $POLICY_ARN
 
     # - name: Create Access Key for IAM User
     #   run: |
