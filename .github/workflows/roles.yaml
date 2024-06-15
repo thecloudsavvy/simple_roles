@@ -1,8 +1,9 @@
-name: Create IAM Role and Policy
+name: Create IAM User and Policy
 
 on: 
   push:
-    branches: [ main ]
+    branches:
+      - master  
 
 jobs:
   create-iam-user-and-policy:
@@ -19,24 +20,9 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
 
-    - name: Create IAM Role
+    - name: Create IAM User
       run: |
-        cat <<EoF > trust-policy.json
-        {
-          "Version": "2012-10-17",
-          "Statement": [
-            {
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "ec2.amazonaws.com"
-              },
-              "Action": "sts:AssumeRole"
-            }
-          ]
-        }
-        EoF
-
-        aws iam create-role --role-name MyGitHubActionRole --assume-role-policy-document file://trust-policy.json
+        aws iam create-user --user-name My-user
 
     - name: Create IAM Policy
       run: |
@@ -57,9 +43,14 @@ jobs:
         }
         EoF
 
-        aws iam create-policy --policy-name MyGitHubActionPolicy --policy-document file://access-policy.json
+        aws iam create-policy --policy-name My-Policy --policy-document file://access-policy.json
 
-    - name: Attach IAM Policy to Role
+    - name: Attach IAM Policy to User
       run: |
-        POLICY_ARN=$(aws iam list-policies --query 'Policies[?PolicyName==`MyGitHubActionPolicy`].Arn' --output text)
-        aws iam attach-role-policy --role-name MyGitHubActionRole --policy-arn $POLICY_ARN
+        POLICY_ARN=$(aws iam list-policies --output json --query 'Users[0].Arn' --output text)
+        aws iam attach-user-policy --user-name My-user --policy-arn $POLICY_ARN
+
+    # - name: Create Access Key for IAM User
+    #   run: |
+    #     aws iam create-access-key --user-name My-user > access-keys.json
+        
