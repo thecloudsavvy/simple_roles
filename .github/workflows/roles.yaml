@@ -3,7 +3,7 @@ name: Create IAM User, S3 Bucket, and Policy
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   create-iam-user-and-policy:
