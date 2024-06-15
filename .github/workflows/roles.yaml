@@ -22,7 +22,7 @@ jobs:
 
     - name: Create IAM User
       run: |
-        aws iam create-user --user-name My-user
+        aws iam create-user --user-name Mynew-user
 
     - name: Create IAM Policy
       run: |
