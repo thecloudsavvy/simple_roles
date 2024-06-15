@@ -22,7 +22,7 @@ jobs:
 
     - name: Create IAM User
       run: |
-        USER_NAME:My-user2
+        USER_NAME=My-user2
         if aws iam get-user --user-name $USER_NAME 2; then
           aws iam delete-user --user-name $USER_NAME
         fi
@@ -47,7 +47,7 @@ jobs:
         }
         EoF
 
-        POLICY_NAME:My-Policy1
+        POLICY_NAME=My-Policy1
 
         aws iam create-policy --policy-name $POLICY_NAME --policy-document file://access-policy.json
 
