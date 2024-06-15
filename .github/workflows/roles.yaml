@@ -1,4 +1,4 @@
-name: Create IAM User and Policy
+name: Create IAM User and Policy v1
 
 on: 
   push:
