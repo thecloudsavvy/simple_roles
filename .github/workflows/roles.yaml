@@ -47,7 +47,8 @@ jobs:
 
     - name: Attach IAM Policy to User
       run: |
-        POLICY_ARN=$(aws iam list-policies --output json --query 'Users[0].Arn' --output text)
+        # POLICY_ARN=$(`aws iam list-policies --output json --query 'Users[0].Arn' --output text`)
+        POLICY_ARN=$(aws iam list-policies --query "Policies[?PolicyName=='MyGitHubActionUserPolicy'].Arn" --output text)
         aws iam attach-user-policy --user-name Mynew-user --policy-arn $POLICY_ARN
 
     # - name: Create Access Key for IAM User
