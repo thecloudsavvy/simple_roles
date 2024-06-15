@@ -25,7 +25,9 @@ jobs:
         USER_NAME=My-user2
         if aws iam get-user --user-name $USER_NAME; then
           echo "User $USER_NAME already exists"
-        else
+        fi
+        
+        if true; then
           aws detach-user-policy --user-name $USER_NAME --policy-arn $POLICY_ARN
           aws iam delete-user --user-name $USER_NAME
         fi
