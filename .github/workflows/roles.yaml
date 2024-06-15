@@ -26,7 +26,7 @@ jobs:
         if aws iam get-user --user-name $USER_NAME 2; then
           aws iam delete-user --user-name $USER_NAME
         fi
-        aws iam create-user --user-name My-user2
+        aws iam create-user --user-name $USER_NAME
 
     - name: Create IAM Policy
       run: |
