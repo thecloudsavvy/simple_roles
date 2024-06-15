@@ -22,7 +22,7 @@ jobs:
 
     - name: Create IAM User
       run: |
-        aws iam create-user --user-name Mynew-user
+        aws iam create-user --user-name My-user1
 
     - name: Create IAM Policy
       run: |
@@ -49,7 +49,7 @@ jobs:
       run: |
         # POLICY_ARN=$(`aws iam list-policies --output json --query 'Users[0].Arn' --output text`)
         POLICY_ARN=$(aws iam list-policies --query "Policies[?PolicyName=='MyGitHubActionUserPolicy'].Arn" --output text)
-        aws iam attach-user-policy --user-name Mynew-user --policy-arn $POLICY_ARN
+        aws iam attach-user-policy --user-name My-user1 --policy-arn $POLICY_ARN
 
     # - name: Create Access Key for IAM User
     #   run: |
