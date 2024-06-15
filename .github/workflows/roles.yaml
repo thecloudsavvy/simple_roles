@@ -22,7 +22,7 @@ jobs:
 
     - name: Create IAM User
       run: |
-        USER_NAME=My-user2
+        USER_NAME=My-user
         if aws iam get-user --user-name $USER_NAME; then
           echo "User $USER_NAME already exists"
         fi
