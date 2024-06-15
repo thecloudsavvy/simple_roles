@@ -1,9 +1,6 @@
-name: Create IAM User and Policy v1
+name: Create IAM User, S3 Bucket, and Policy
 
-on: 
-  push:
-    branches:
-      - master  
+on: [push]
 
 jobs:
   create-iam-user-and-policy:
@@ -20,21 +17,27 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
 
-    - name: Create IAM User
+    - name: Create S3 Bucket
       run: |
-        USER_NAME=My-user
-        if aws iam get-user --user-name $USER_NAME; then
-          echo "User $USER_NAME already exists"
+        BUCKET_NAME=my-github-action-bucket
+        if ! aws s3api head-bucket --bucket $BUCKET_NAME 2>/dev/null; then
+          aws s3api create-bucket --bucket $BUCKET_NAME --region us-east-1
         fi
-        
-        if true; then
-          aws detach-user-policy --user-name $USER_NAME --policy-arn $POLICY_ARN
+
+    - name: Delete Existing IAM User (if exists)
+      run: |
+        USER_NAME=My-user2
+        if aws iam get-user --user-name $USER_NAME 2>/dev/null; then
           aws iam delete-user --user-name $USER_NAME
         fi
-        aws iam create-user --user-name $USER_NAME
+
+    - name: Create IAM User
+      run: |
+        aws iam create-user --user-name My-user2
 
     - name: Create IAM Policy
       run: |
+        BUCKET_NAME=my-github-action-bucket
         cat <<EoF > access-policy.json
         {
           "Version": "2012-10-17",
@@ -46,23 +49,20 @@ jobs:
                 "s3:GetObject",
                 "s3:PutObject"
               ],
-              "Resource": "*"
+              "Resource": [
+                "arn:aws:s3:::$BUCKET_NAME",
+                "arn:aws:s3:::$BUCKET_NAME/*"
+              ]
             }
           ]
         }
         EoF
 
-        POLICY_NAME=My-Policy1
-
-        aws iam create-policy --policy-name $POLICY_NAME --policy-document file://access-policy.json
+        aws iam create-policy --policy-name MyGitHubActionUserPolicy --policy-document file://access-policy.json
 
     - name: Attach IAM Policy to User
       run: |
-        # POLICY_ARN=$(`aws iam list-policies --output json --query 'Policies[0].Arn' --output text`)
-        POLICY_ARN=$(aws iam list-policies --query "Policies[?PolicyName=='$POLICY_NAME'].Arn" --output text)
-        aws iam attach-user-policy --user-name $USER_NAME --policy-arn $POLICY_ARN
+        POLICY_ARN=$(aws iam list-policies --query "Policies[?PolicyName=='MyGitHubActionUserPolicy'].Arn" --output text)
+        aws iam attach-user-policy --user-name My-user2 --policy-arn $POLICY_ARN
 
-    # - name: Create Access Key for IAM User
-    #   run: |
-    #     aws iam create-access-key --user-name My-user > access-keys.json
-        
+    
