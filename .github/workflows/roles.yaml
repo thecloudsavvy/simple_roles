@@ -1,0 +1,65 @@
+name: Create IAM Role and Policy
+
+on: 
+  push:
+    branches: [ main ]
+
+jobs:
+  create-iam-user-and-policy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+
+    - name: Create IAM Role
+      run: |
+        cat <<EoF > trust-policy.json
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ec2.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        }
+        EoF
+
+        aws iam create-role --role-name MyGitHubActionRole --assume-role-policy-document file://trust-policy.json
+
+    - name: Create IAM Policy
+      run: |
+        cat <<EoF > access-policy.json
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "s3:ListBucket",
+                "s3:GetObject",
+                "s3:PutObject"
+              ],
+              "Resource": "*"
+            }
+          ]
+        }
+        EoF
+
+        aws iam create-policy --policy-name MyGitHubActionPolicy --policy-document file://access-policy.json
+
+    - name: Attach IAM Policy to Role
+      run: |
+        POLICY_ARN=$(aws iam list-policies --query 'Policies[?PolicyName==`MyGitHubActionPolicy`].Arn' --output text)
+        aws iam attach-role-policy --role-name MyGitHubActionRole --policy-arn $POLICY_ARN
