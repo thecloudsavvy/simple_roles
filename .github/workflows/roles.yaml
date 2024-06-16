@@ -55,7 +55,7 @@ jobs:
         aws iam create-user --user-name $USER_NAME
 
     - name: Create IAM Policy (if not exists)
-      run: .policy.sh ${{ env.POLICY_NAME }}
+      run: ./policy.sh ${{ env.POLICY_NAME }}
 
     - name: Attach IAM Policy to User
       run: |
