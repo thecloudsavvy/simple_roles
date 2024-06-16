@@ -35,7 +35,7 @@ jobs:
         if aws iam get-user --user-name $USER_NAME 2>/dev/null; then
           echo "User $USER_NAME exists, deleting..."
           POLICY_ARN=$(aws iam list-policies --query "Policies[?PolicyName=='$POLICY_NAME'].Arn" --output text)
-          if [ "$POLICY_ARN" != "None" ]; then
+          if [ -n "$POLICY_ARN" != "None" ]; then
             aws iam detach-user-policy --user-name $USER_NAME --policy-arn $POLICY_ARN
           fi
           aws iam delete-user --user-name $USER_NAME
@@ -45,7 +45,7 @@ jobs:
 
         # Check if policy exists and delete if necessary
         POLICY_ARN=$(aws iam list-policies --query "Policies[?PolicyName=='$POLICY_NAME'].Arn" --output text)
-        if [ "$POLICY_ARN" != "None" ]; then
+        if [ -n "$POLICY_ARN" != "None" ]; then
           aws iam delete-policy --policy-arn $POLICY_ARN
         fi
 
@@ -80,7 +80,10 @@ jobs:
         USER_NAME=${{ env.USER_NAME }}
         POLICY_NAME=${{ env.POLICY_NAME }}
         POLICY_ARN=$(aws iam list-policies --query "Policies[?PolicyName=='$POLICY_NAME'].Arn" --output text)
-        aws iam attach-user-policy --user-name $USER_NAME --policy-arn $POLICY_ARN
+        if [ -n "$POLICY_ARN" != "None" ]; then
+          aws iam attach-user-policy --user-name $UserName --policy-arn $POLICY_ARN
+        else
+          echo "policy $POLICY_NAME does not exist"
 
 
 
