@@ -1,4 +1,4 @@
-name: Create IAM User, S3 Bucket, and Policy
+name: Create IAM User and Policy
 
 on:
   push:
@@ -20,25 +20,43 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
 
-    - name: Delete Existing IAM User (if exists)
+    - name: Set Environment Variables
       run: |
-        USER_NAME=My-user2
-        POLICY=Mypolicy
-        if aws iam get-user --user-name $USER_NAME 2>/dev/null; then
-          POLICY_ARN=$(aws iam list-policies --query "Policies[?PolicyName==$POLICY].Arn" --output text)
-          aws iam detach-user-policy --user-name $USER_NAME --policy-arn $POLICY_ARN
-          aws iam delete-user --user-name $USER_NAME
+        echo "USER_NAME=My-user2" >> $GITHUB_ENV
+        echo "POLICY_NAME=Mypolicy" >> $GITHUB_ENV
 
+    - name: Delete Existing IAM User and Policy (if exists)
+      run: |
+        set -e
+        USER_NAME=${{ env.USER_NAME }}
+        POLICY_NAME=${{ env.POLICY_NAME }}
+
+        # Check if user exists and delete if necessary
+        if aws iam get-user --user-name $USER_NAME 2>/dev/null; then
+          echo "User $USER_NAME exists, deleting..."
+          POLICY_ARN=$(aws iam list-policies --query "Policies[?PolicyName=='$POLICY_NAME'].Arn" --output text)
+          if [ "$POLICY_ARN" != "None" ]; then
+            aws iam detach-user-policy --user-name $USER_NAME --policy-arn $POLICY_ARN
+          fi
+          aws iam delete-user --user-name $USER_NAME
         else
           echo "User $USER_NAME does not exist"
         fi
-    
+
+        # Check if policy exists and delete if necessary
+        POLICY_ARN=$(aws iam list-policies --query "Policies[?PolicyName=='$POLICY_NAME'].Arn" --output text)
+        if [ "$POLICY_ARN" != "None" ]; then
+          aws iam delete-policy --policy-arn $POLICY_ARN
+        fi
+
     - name: Create IAM User
       run: |
+        USER_NAME=${{ env.USER_NAME }}
         aws iam create-user --user-name $USER_NAME
 
     - name: Create IAM Policy
       run: |
+        POLICY_NAME=${{ env.POLICY_NAME }}
         cat <<EoF > access-policy.json
         {
           "Version": "2012-10-17",
@@ -55,13 +73,15 @@ jobs:
           ]
         }
         EoF
-
-        aws iam create-policy --policy-name $POLICY --policy-document file://access-policy.json
+        aws iam create-policy --policy-name $POLICY_NAME --policy-document file://access-policy.json
 
     - name: Attach IAM Policy to User
       run: |
-        POLICY_ARN=$(aws iam list-policies --query "Policies[?PolicyName=='MyGitHubActionUserPolicy'].Arn" --output text)
-        aws iam attach-user-policy --user-name My-user2 --policy-arn $POLICY_ARN
+        USER_NAME=${{ env.USER_NAME }}
+        POLICY_NAME=${{ env.POLICY_NAME }}
+        POLICY_ARN=$(aws iam list-policies --query "Policies[?PolicyName=='$POLICY_NAME'].Arn" --output text)
+        aws iam attach-user-policy --user-name $USER_NAME --policy-arn $POLICY_ARN
+
 
 
 
