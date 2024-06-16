@@ -35,7 +35,7 @@ jobs:
         if aws iam get-user --user-name $USER_NAME 2>/dev/null; then
           echo "User $USER_NAME exists, deleting..."
           POLICY_ARN=$(aws iam list-policies --query "Policies[?PolicyName=='$POLICY_NAME'].Arn" --output text)
-          if [ -n "$POLICY_ARN" != "None" ]; then
+          if [ -n "$POLICY_ARN" ]; then
             aws iam detach-user-policy --user-name $USER_NAME --policy-arn $POLICY_ARN
           fi
           aws iam delete-user --user-name $USER_NAME
@@ -45,7 +45,7 @@ jobs:
 
         # Check if policy exists and delete if necessary
         POLICY_ARN=$(aws iam list-policies --query "Policies[?PolicyName=='$POLICY_NAME'].Arn" --output text)
-        if [ -n "$POLICY_ARN" != "None" ]; then
+        if [ -n "$POLICY_ARN" ]; then
           aws iam delete-policy --policy-arn $POLICY_ARN
         fi
 
@@ -54,42 +54,20 @@ jobs:
         USER_NAME=${{ env.USER_NAME }}
         aws iam create-user --user-name $USER_NAME
 
-    - name: Create IAM Policy
-      run: |
-        POLICY_NAME=${{ env.POLICY_NAME }}
-        POLICY_ARN=$(aws iam list-policies --query "Policies[?PolicyName=='$POLICY_NAME'].Arn" --output text)
-        if [ -z "$POLICY_ARN" ]; then
-          cat <<EoF > access-policy.json
-          {
-            "Version": "2012-10-17",
-            "Statement": [
-              {
-                "Effect": "Allow",
-                "Action": [
-                  "s3:ListBucket",
-                  "s3:GetObject",
-                  "s3:PutObject"
-                ],
-                "Resource": "*"
-              }
-            ]
-          }
-          EoF
-          aws iam create-policy --policy-name $POLICY_NAME --policy-document file://access-policy.json
-        else
-          echo "policy $POLICY_NAME already exists"
-          aws iam delete-policy --policy-arn $POLICY_ARN
-        fi
+    - name: Create IAM Policy (if not exists)
+      run: .policy.sh ${{ env.POLICY_NAME }}
 
     - name: Attach IAM Policy to User
       run: |
         USER_NAME=${{ env.USER_NAME }}
         POLICY_NAME=${{ env.POLICY_NAME }}
         POLICY_ARN=$(aws iam list-policies --query "Policies[?PolicyName=='$POLICY_NAME'].Arn" --output text)
-        if [ -n "$POLICY_ARN" != "None" ]; then
-          aws iam attach-user-policy --user-name $UserName --policy-arn $POLICY_ARN
+        if [ -n "$POLICY_ARN" ]; then
+          aws iam attach-user-policy --user-name $USER_NAME --policy-arn $POLICY_ARN
         else
-          echo "policy $POLICY_NAME does not exist"
+          echo "Policy $POLICY_NAME does not exist"
+        fi
+
 
 
 
