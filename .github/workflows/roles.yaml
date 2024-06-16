@@ -58,7 +58,7 @@ jobs:
       run: |
         POLICY_NAME=${{ env.POLICY_NAME }}
         POLICY_ARN=$(aws iam list-policies --query "Policies[?PolicyName=='$POLICY_NAME'].Arn" --output text)
-        if [ -z $POLICY_ARN ]; then
+        if [ -z "$POLICY_ARN" ]; then
           cat <<EoF > access-policy.json
           {
             "Version": "2012-10-17",
