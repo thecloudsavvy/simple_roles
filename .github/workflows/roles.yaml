@@ -79,6 +79,7 @@ jobs:
         else
           echo "policy $POLICY_NAME already exists"
           aws iam delete-policy --policy-arn $POLICY_ARN
+        fi
 
     - name: Attach IAM Policy to User
       run: |
